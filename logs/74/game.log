@@ -1,0 +1,60 @@
+3: log started
+2: Loading rulesets
+3: Trying "default/techs.ruleset".
+3: Data path component (0): .
+3: Data path component (1): data
+3: HOME is /home/freeciv
+3: Data path component (2): /home/freeciv/.freeciv
+3: Data path component (3): /usr/local/share/freeciv
+3: Reading registry from "/usr/local/share/freeciv/default/techs.ruleset"
+3: 88 advances (including possibly unused)
+3: Trying "default/buildings.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/buildings.ruleset"
+3: 67 improvement types (including possibly unused)
+3: Trying "default/governments.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/governments.ruleset"
+3: Trying "default/units.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/units.ruleset"
+3: 52 unit types (including possibly unused)
+3: Trying "default/terrain.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/terrain.ruleset"
+3: Trying "default/cities.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/cities.ruleset"
+3: Trying "default/nations.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/nations.ruleset"
+3: Trying "default/effects.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/effects.ruleset"
+3: Nation Afghani: government "Fundamentalism" not found.
+3: Nation American: government "Fundamentalism" not found.
+3: Nation Brazilian: government "Fundamentalism" not found.
+3: Nation Bulgarian: government "Fundamentalism" not found.
+3: Nation Burmese: government "Fundamentalism" not found.
+3: Nation Byzantine: government "Fundamentalism" not found.
+3: Nation Catalan: government "Fundamentalism" not found.
+3: Nation Chilean: government "Fundamentalism" not found.
+3: Nation English: government "Fundamentalism" not found.
+3: Nation French: government "Fundamentalism" not found.
+3: Nation Galician: government "Fundamentalism" not found.
+3: Nation Gallic: government "Fundamentalism" not found.
+3: Nation German: government "Fundamentalism" not found.
+3: Nation Irish: government "Fundamentalism" not found.
+3: Nation Lithuanian: civil war nation "prussian" is unknown.
+3: Nation Persian: government "Fundamentalism" not found.
+3: Nation Polish: government "Fundamentalism" not found.
+3: Nation Romanian: government "Fundamentalism" not found.
+3: Nation Russian: government "Fundamentalism" not found.
+3: Nation Slovakian: government "Fundamentalism" not found.
+3: Nation Spanish: government "Fundamentalism" not found.
+3: Nation Swiss: government "Fundamentalism" not found.
+3: Nation Texan: government "Fundamentalism" not found.
+3: Nation Tibetan: government "Fundamentalism" not found.
+3: Nation Venezuela: government "Fundamentalism" not found.
+3: Trying "default/game.ruleset".
+3: Reading registry from "/usr/local/share/freeciv/default/game.ruleset"
+3: Trying "default/script.lua".
+3: Reading registry from "/home/freeciv/fc_auth.conf"
+3: Could not find readable file "/home/freeciv/serversettings.serv" in data path.
+2: Loading script file: /home/freeciv/serversettings.serv
+3: Could not find readable file "longturn" in data path.
+2: Now accepting new client connections.
+2: Server cannot read standard input. Ignoring input.
