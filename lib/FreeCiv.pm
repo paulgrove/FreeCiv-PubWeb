@@ -24,6 +24,7 @@ sub _init {
 
 	$self->{turns} = { count => 0 };
 	$self->{players} = {};
+	$self->{port} = 0;
 
 }
 
