@@ -71,9 +71,6 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 	$dir_log->mkpath() unless -d $dir_log;
 	$dir_save->mkpath() unless -d $dir_save;
 
-	mkdir dir($dir_save, $id);
-	mkdir dir($dir_log, $id);
-	
 	my $pid = fork();
 	if ($pid == -1 ) {
 		die "could not fork $!";

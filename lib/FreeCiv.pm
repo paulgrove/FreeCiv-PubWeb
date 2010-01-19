@@ -6,6 +6,8 @@ use DateTime;
 use Data::Dumper;
 use Hash::Merge qw(merge);
 
+use UNIVERSAL qw(isa);
+
 sub new {
 
 	my ($class, $args) = @_;
@@ -24,7 +26,7 @@ sub _init {
 
 	$self->{turns} = { count => 0 };
 	$self->{players} = {};
-	$self->{port} = 0;
+#	$self->{port} = 0;
 
 }
 
@@ -32,7 +34,7 @@ sub create_tail_app {
 
 	my ( $self, $args) = @_;
 	tail_app( {
-		new => $args->{log_file},
+		new =>  [ isa ($args->{log_file}, 'Path::Class') ? $args->{log_file}->stringify : $args->{log_file} ],
 		line_handler =>  sub { $self->_parse_log( @_); }  ,
 		lastrun_file => $args->{log_file} . ".pos", 
 	});
