@@ -3,10 +3,12 @@
 use strict;
 use warnings;
 
+use DateTime;
 use Config::Simple;
 use Path::Class;
 use Unix::PID;
-
+use Time::Interval;
+use File::Touch;
 
 # find where we live
 use FindBin qw($Bin);
@@ -63,10 +65,18 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 	print "Avaliable Ports: " . @ports  . "\n";
 	$fc->{port} = pop(@ports);
 
+	$cfg->param('Avaliable_Ports', "@ports");
+	$cfg->param('Last_Game_ID', $id);
+	$cfg->save();
+
 	my $dir_log = dir($dir_base, "logs", $id);
 	my $dir_save = dir($dir_base, "savegames", $id);
 	my $file_rank_log = file($dir_log, "rank.log"); 
 	my $file_game_log = file($dir_log, "game.log");
+	my $file_server_output = file($dir_log, "server.output");
+	touch($file_rank_log);
+	touch($file_game_log);
+	touch($file_server_output);
 
 	$dir_log->mkpath() unless -d $dir_log;
 	$dir_save->mkpath() unless -d $dir_save;
@@ -76,25 +86,27 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 		die "could not fork $!";
 	} elsif ($pid == 0 ) {
 		# child 
-		#close STDOUT;
-		#close STDIN;
-		#close STDERR;
-		
-		exec ("echo civserver -N -P -e -p $fc->{port} -a $file_auth -r $file_serversetttings -R  $file_rank_log -s $dir_save -d 3 -l $file_game_log");
+		close STDOUT;
+		close STDIN;
+		close STDERR;
+		exec ("civserver -N -P -e -p $fc->{port} -a $file_auth -r $file_serversetttings -R  $file_rank_log -s $dir_save -d 3 -l $file_game_log > $file_server_output");
 	
 	} else {
 		# parent
 		print "child server is running with pid = $pid\n";
+
 		$fc->create_tail_app( {log_file => $file_game_log} );
-		#$fc->{turns}
+
+		$fc->{serverrunning} = 1;
+		my $timer = DateTime->now();
+		print "Entering looppppppp";
 		while ($pid_obj->is_running($pid)) {
 			## Here we should dump the object at regular intervals
+			print getInterval($timer, DateTime->now());
 		}
-	}
-	$cfg->param('Avaliable_Ports', "@ports");
-	$cfg->param('Last_Game_ID', $id);
-	$cfg->save();
 
+		$fc->{serverrunning} = 0;
+	}
 	
 }
 else {
