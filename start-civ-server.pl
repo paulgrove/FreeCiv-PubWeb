@@ -9,6 +9,8 @@ use Path::Class;
 use Unix::PID;
 use Time::Interval;
 use File::Touch;
+use POSIX ":sys_wait_h";
+#use Proc::ProcessTable::Process;
 
 # find where we live
 use FindBin qw($Bin);
@@ -74,12 +76,17 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 	my $file_rank_log = file($dir_log, "rank.log"); 
 	my $file_game_log = file($dir_log, "game.log");
 	my $file_server_output = file($dir_log, "server.output");
-	touch($file_rank_log);
-	touch($file_game_log);
-	touch($file_server_output);
 
 	$dir_log->mkpath() unless -d $dir_log;
 	$dir_save->mkpath() unless -d $dir_save;
+
+	#touch($file_rank_log);
+	#touch($file_game_log);
+	#touch($file_server_output);
+	## No Longer need to touch or otherwise populate files. I think.
+	#open FILE, ">", $file_game_log  or die $!;
+	#print FILE "Prepairing log file for pubweb\n";
+	#close FILE;
 
 	my $pid = fork();
 	if ($pid == -1 ) {
@@ -94,18 +101,31 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 	} else {
 		# parent
 		print "child server is running with pid = $pid\n";
-
-		$fc->create_tail_app( {log_file => $file_game_log} );
+		
+		$fc->loadfile({log_file => $file_game_log} ); # open gamelog file for tail
 
 		$fc->{serverrunning} = 1;
-		my $timer = DateTime->now();
-		print "Entering looppppppp";
-		while ($pid_obj->is_running($pid)) {
-			## Here we should dump the object at regular intervals
-			print getInterval($timer, DateTime->now());
+
+		my $timer = DateTime->now(); # start timer
+		print "Entering loop\n";
+		while (kill(0, $pid)) { # Is child (civserver) process alive?
+			if (getInterval($timer, DateTime->now())->{seconds} > 5) { # wait 5 seconds
+				$fc->readlines; # process all new lines
+				$timer = DateTime->now(); # Reset timer
+				## FIXME ## Dump output at this point.
+			}
+			waitpid(-1, WNOHANG);  ## This clears the zombies with hanging.
 		}
 
+		$fc->readlines; # Get any remaining lines after child has died
+
 		$fc->{serverrunning} = 0;
+
+		# Server has stopped - Release port for new servers to use.
+		@ports = split(' ', $cfg->param('Avaliable_Ports'));
+		push (@ports, $fc->{port});
+		$cfg->param('Avaliable_Ports', "@ports");
+		$cfg->save();
 	}
 	
 }

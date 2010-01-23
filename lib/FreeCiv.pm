@@ -1,6 +1,6 @@
 package FreeCiv;
 
-use File::Tail::App;
+use File::Tail;
 
 use DateTime;
 use Data::Dumper;
@@ -30,16 +30,21 @@ sub _init {
 
 }
 
-sub create_tail_app {
+sub loadfile {
+	my ($self, $args) = @_;
+	$self->{file}=File::Tail->new(name=>$args->{log_file}, nowait=>1, ignore_nonexistant=>1);
+}
 
-	my ( $self, $args) = @_;
-	tail_app( {
-		new =>  [ isa ($args->{log_file}, 'Path::Class') ? $args->{log_file}->stringify : $args->{log_file} ],
-		line_handler =>  sub { $self->_parse_log( @_); }  ,
-		lastrun_file => $args->{log_file} . ".pos", 
-	});
-	
-
+sub readlines {
+	my ($self, $args) = @_;
+	my $line;
+	$line=$self->{file}->read;
+	print $line; ## FIXME ## Can the asignment and the check all go in the while condition. would save some processing.
+	while ($line > "") { ## if there is no lines remaining read will return ""
+		print DateTime->now() . $line;
+		_parse_log($self, $line);
+		$line=$self->{file}->read;
+	}
 }
 
 =c
