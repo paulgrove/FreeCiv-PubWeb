@@ -1,7 +1,7 @@
 package FreeCiv;
 
 use File::Tail;
-
+use Data::Dumper;
 use DateTime;
 use Data::Dumper;
 use Hash::Merge qw(merge);
@@ -33,6 +33,13 @@ sub _init {
 sub loadfile {
 	my ($self, $args) = @_;
 	$self->{file}=File::Tail->new(name=>$args->{log_file}, nowait=>1, ignore_nonexistant=>1);
+}
+
+sub dumpoutput {
+	my ($self, $args) = @_;
+	open FILE, ">", $args->{output_filename} or warn "Cant open file";
+	print FILE Dumper($self);
+	close FILE;
 }
 
 sub readlines {
@@ -86,7 +93,7 @@ sub _parse_log{
 	##	Player Connects
 	if ($line =~ /2:\s+\((\d+)\)\s+(.*):\s+connected\s\[(.*)\]/) {
 		my $player = { 
-			number => $1 - 1,
+		#	number => $1 - 1,  #  (not tied to player)
 			name => $2,
 			ip => [ $3 ],
 			connected => 1,
@@ -154,8 +161,14 @@ sub find_player {
 
 sub set_player {
 	my ($self, $player) = @_;
-	my $player_found = $self->find_player($player->{number});
+	my $player_found;
 	my $players = $self->players();
+
+#	if (defined($player->{name}) {	
+		$player_found = $self->find_player($player->{name});
+#	else {
+#		$player_found = $self->find_player($player->{number});
+#	}
 
 	if (defined $player_found) {
 		$player = merge($player, $player_found);
@@ -164,8 +177,11 @@ sub set_player {
 		$players->{count}++;
 	}
 
+#	if (defined($player->{name})) {
 	$players->{$player->{name}} = $player;
-	$players->{$player->{number}} = $player;
+#	}
+	
+#	$players->{$player->{number}} = $player;
 	
 	return $player;
 }
