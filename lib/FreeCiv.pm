@@ -61,8 +61,8 @@ sub readlines {
 sub _parse_log{
 	my ($self, $line) = @_;
 	my $current_turn = $self->current_turn;
-	my $turns = $self->turns();
-	my $players = $self->players;
+#	my $turns = $self->turns();
+#	my $players = $self->players;
 
 	## End of turn
 	if ($line =~ /End\/start-turn/) {
@@ -138,16 +138,15 @@ sub _parse_log{
 
 sub extractnationruleset { #($player)
 	my ($self, $player) = @_;
-	# FIXME # OK the Config::Simple module has trouble reading the ruleset file, i think it'll be easier to write a simple file parser here instead
-#	my %Config;
-#	my $ruleset = new Config::Simple(file($dir_base, "nation", "$player->{nation}.ruleset"));
-#	$player->{flag} = $ruleset->param('flag'); # "nation_$player->{nation}.flag");
-#	my $nation_dir = dir($self->{dir_base}, "nation");
-#	my $nation_file = dir($nation_dir, lc($player->{nation}) . ".ruleset");
-#	$self->debug("Nation_Dir = $nation_dir");
-#	$self->debug("Opening Nation ruleset: " . $nation_file);
-#	Config::Simple->import_from($nation_file, \%Config);
-#	$self->debug("Ruleset crap: ". Dumper(%Config));
+	my $nation_dir = dir($self->{dir_base}, "nation");
+	my $nation_file = dir($nation_dir, lc($player->{nation}) . ".ruleset");
+	open( FILE, "< $nation_file" );
+	while( <FILE> ) {
+		if (/flag\s*=\s*\"(.*)\"/) {
+			$player->{flag} = $1;
+		}
+	}
+	close (FILE);
 	return $player;
 }
 
@@ -185,7 +184,9 @@ sub remove_player {
 	$self->debug (Dumper($self->{data}->{players}->{$playername}));
 	
 #	undef $self->{players}->{$playername};
-	delete $self->{data}->{players}->{$playername};
+	delete $self->{data}->{players}->{$playername}->{ip};
+#	delete $self->{data}->{players}->{$playername};
+#	delete $self->{data}->{players}->{$playername};
 	delete $self->{data}->{players}->{$removednumber};
 
 	foreach ($self->{data}->{players}) {
@@ -242,8 +243,8 @@ sub set_player {
 
 sub current_turn {
 	my ($self) = @_;
-	my $turns = $self->turns();
-	$turns->{$self->{data}->{turn_count}} ||= {};
+#	my $turns = $self->turns();
+#	$turns->{$self->{data}->{turn_count}} ||= {};
 	my $current_turn = $turns->{$self->{data}->{turn_count}};
 
 	return $current_turn;
