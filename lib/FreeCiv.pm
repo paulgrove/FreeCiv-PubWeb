@@ -184,9 +184,9 @@ sub remove_player {
 	$self->debug (Dumper($self->{data}->{players}->{$playername}));
 	
 #	undef $self->{players}->{$playername};
-	delete $self->{data}->{players}->{$playername}->{ip};
-#	delete $self->{data}->{players}->{$playername};
-#	delete $self->{data}->{players}->{$playername};
+#	delete $self->{data}->{players}->{$playername}->{ip};
+ #	delete $self->{data}->{players}->{$playername};
+	delete $self->{data}->{players}->{$playername};
 	delete $self->{data}->{players}->{$removednumber};
 
 	foreach ($self->{data}->{players}) {
