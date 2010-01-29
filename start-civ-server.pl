@@ -61,11 +61,11 @@ else {
 
 if (isint($ports[$#ports])) { # Port to be popped sanity check
 
-	my $fc = FreeCiv->new({turns => 0});
+	my $fc = FreeCiv->new({debug => 1, dir_base => $dir_base});
 
 	print "Game ID: $id\n";
 	print "Avaliable Ports: " . @ports  . "\n";
-	$fc->{port} = pop(@ports);
+	$fc->{data}->{port} = pop(@ports);
 
 	$cfg->param('Avaliable_Ports', "@ports");
 	$cfg->param('Last_Game_ID', $id);
@@ -96,7 +96,7 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 		close STDOUT;
 		close STDIN;
 		close STDERR;
-		exec ("civserver -N -P -e -p $fc->{port} -a $file_auth -r $file_serversetttings -R  $file_rank_log -s $dir_save -d 3 -l $file_game_log > $file_server_output");
+		exec ("civserver -N -P -e -p $fc->{data}->{port} -a $file_auth -r $file_serversetttings -R  $file_rank_log -s $dir_save -d 3 -l $file_game_log > $file_server_output");
 	
 	} else {
 		# parent
@@ -104,7 +104,7 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 		
 		$fc->loadfile({log_file => $file_game_log} ); # open gamelog file for tail
 
-		$fc->{serverrunning} = 1;
+		$fc->{data}->{serverrunning} = 1;
 
 		$fc->dumpoutput({output_filename => $file_script_output});
 
@@ -125,7 +125,7 @@ if (isint($ports[$#ports])) { # Port to be popped sanity check
 
 		# Server has stopped - Release port for new servers to use.
 		@ports = split(' ', $cfg->param('Avaliable_Ports'));
-		push (@ports, $fc->{port});
+		push (@ports, $fc->{data}->{port});
 		$cfg->param('Avaliable_Ports', "@ports");
 		$cfg->save();
 	}

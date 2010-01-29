@@ -5,6 +5,10 @@ use Data::Dumper;
 use DateTime;
 use Data::Dumper;
 use Hash::Merge qw(merge);
+use Config::Simple;
+use Path::Class;
+
+Hash::Merge::set_behavior( 'RIGHT_PRECEDENT' );
 
 use UNIVERSAL qw(isa);
 
@@ -24,8 +28,8 @@ sub _init {
 
 	my ($self) = @_;
 
-	$self->{turns} = { count => 0 };
-	$self->{players} = {};
+	$self->{data}->{turns} = {};
+	$self->{data}->{players} = {};
 #	$self->{port} = 0;
 
 }
@@ -38,7 +42,7 @@ sub loadfile {
 sub dumpoutput {
 	my ($self, $args) = @_;
 	open FILE, ">", $args->{output_filename} or warn "Cant open file";
-	print FILE Dumper($self);
+	print FILE Dumper($self->{data});
 	close FILE;
 }
 
@@ -48,30 +52,11 @@ sub readlines {
 	$line=$self->{file}->read;
 	print $line; ## FIXME ## Can the asignment and the check all go in the while condition. would save some processing.
 	while ($line > "") { ## if there is no lines remaining read will return ""
-		print DateTime->now() . $line;
+	#	print DateTime->now() . $line;
 		_parse_log($self, $line);
 		$line=$self->{file}->read;
 	}
 }
-
-=c
-		$fc = {
-			turns => {
-				count => 4,
-				0 => { start_time }
- 				1 => {},
-				2 => {},
-			},
-			players => {
-				count => 102;
-				0 => {
-					name => "blah",
-					stuff => "more stuff",
-				}
-				1 => {}
-			},
-		}
-=cut
 
 sub _parse_log{
 	my ($self, $line) = @_;
@@ -81,7 +66,7 @@ sub _parse_log{
 
 	## End of turn
 	if ($line =~ /End\/start-turn/) {
-		if ($turns->{count} > 0) {
+		if ($self->{data}->{turn_count} > 0) {
 			$current_turn->{end_time} = "". DateTime->now();
 			$self->debug("\t". Dumper $current_turn);
 		}
@@ -97,6 +82,7 @@ sub _parse_log{
 			name => $2,
 			ip => [ $3 ],
 			connected => 1,
+			type => "HUMAN",
 		};
 
 		$self->debug("adding player :". Dumper($player));
@@ -106,10 +92,11 @@ sub _parse_log{
 	##	Players assigned at game start
 	if ($line =~ /assigning\splayer\s(\d+)\s\((.*)\)\sto\spos\s(\d+)/) {
 		my $player = {
-			number => $1,
+			number => $1 + 1,
 			nation => $2,
 			start_pos => $3,
 		};
+		$player = $self->extractnationruleset($player);
 		$self->debug("assigning player :". Dumper($player));
 		$self->set_player($player);
 	}
@@ -126,12 +113,42 @@ sub _parse_log{
 		$self->set_player($player);
 	}
 
+	if ($line =~ /Removing player (.+)\./) {
+		my $playername = $1;
+		$self->remove_player($playername);
+	}
+
+	if ($line =~ /2: (.+) has been added as (.+) level AI-controlled player\./) {
+		my $player = {
+			name => $1,
+			type => "AI",
+			difficulty => $2,
+		};
+		$self->debug("AI created: " . Dumper($player));
+		$self->set_player($player);
+	}
+
 	# FIXME: broken assumptions we never want to do this
 	# we should only have one game per log, or we start needing to track line numbers :-(
 #	if ($line =~ /log started/) {
 #		$self->debug("log started: " . Dumper($self));
 #		$self->_init();
 #	}
+}
+
+sub extractnationruleset { #($player)
+	my ($self, $player) = @_;
+	# FIXME # OK the Config::Simple module has trouble reading the ruleset file, i think it'll be easier to write a simple file parser here instead
+#	my %Config;
+#	my $ruleset = new Config::Simple(file($dir_base, "nation", "$player->{nation}.ruleset"));
+#	$player->{flag} = $ruleset->param('flag'); # "nation_$player->{nation}.flag");
+#	my $nation_dir = dir($self->{dir_base}, "nation");
+#	my $nation_file = dir($nation_dir, lc($player->{nation}) . ".ruleset");
+#	$self->debug("Nation_Dir = $nation_dir");
+#	$self->debug("Opening Nation ruleset: " . $nation_file);
+#	Config::Simple->import_from($nation_file, \%Config);
+#	$self->debug("Ruleset crap: ". Dumper(%Config));
+	return $player;
 }
 
 sub debug {
@@ -144,53 +161,90 @@ sub debug {
 sub turns {
 	my ($self) = @_;
 	
-	return $self->{turns};
+	return $self->{data}->{turns};
 }
 
 sub players {
 	my ($self) = @_;
 	
-	return $self->{players};
+	return $self->{data}->{players};
 }
 
 sub find_player {
 	my ($self, $player) = @_;
 	my $players = $self->players();
+#	$self->debug("Finding: $player");
+#	$self->debug("Found: " . Dumper($self->{data}->{players}));
 	return $players->{$player};
 }
 
-sub set_player {
-	my ($self, $player) = @_;
-	my $player_found;
-	my $players = $self->players();
+sub remove_player {
+	my ($self, $playername) = @_;
+	my $removednumber = scalar $self->{data}->{players}->{$playername}->{number};
+	$self->debug ("Removing player: $playername\n");
+	$self->debug (Dumper($self->{data}->{players}->{$playername}));
+	
+#	undef $self->{players}->{$playername};
+	delete $self->{data}->{players}->{$playername};
+	delete $self->{data}->{players}->{$removednumber};
 
-#	if (defined($player->{name}) {	
-		$player_found = $self->find_player($player->{name});
-#	else {
-#		$player_found = $self->find_player($player->{number});
-#	}
+	foreach ($self->{data}->{players}) {
+		if ($self->{data}->{players}->{$_}->{number} > $removednumber) { # $removednumber (willbe)
+			$self->{data}->{players}->{$_}->{number}--;
+		}
+	}
+	$self->{data}->{player_count}--;
+}
+
+sub set_player {
+	my ($self, $input_player) = @_;
+	my $players = $self->players();
+	my $player_found;
+#	$self->debug("Set player: " . Dumper($input_player)); 
+#	if (defined($input_player->{number})) {	
+	if ($input_player->{number} > 0) {
+		$self->debug("Searching for exisitng player by: $input_player->{number}");
+		$player_found = $self->find_player($input_player->{number});
+	}
+	else {  # if (defined($input_player->{number})) {
+		$self->debug("Searching for exisitng player by: $input_player->{name}");
+		$player_found = $self->find_player($input_player->{name});
+	}
+	
+	$self->debug("Player Found: " . Dumper($player_found));	
+
+#	$self->debug("Player Found Example 1: " . Dumper($self->{data}->{players}->{1}));	
+
+#	$self->debug("Player Found Example og: " . Dumper($self->{data}->{players}->{og}));	
+
+#	$self->debug("Player Found Example byref: " . Dumper($self->{data}->{players}->{"" .$input_player->{number}}));	
 
 	if (defined $player_found) {
-		$player = merge($player, $player_found);
+		$self->debug("Existing player found: " . Dumper($player_found));	
+		$input_player = merge($player_found, $input_player);
 	}
 	else {
-		$players->{count}++;
+		$self->debug("Creating new player");
+		$self->{data}->{player_count}++;
+		$input_player->{number} = $self->{data}->{player_count};
 	}
 
 #	if (defined($player->{name})) {
-	$players->{$player->{name}} = $player;
+	$players->{$input_player->{name}} = $input_player;
 #	}
-	
-#	$players->{$player->{number}} = $player;
-	
-	return $player;
+#	if (defined($player->{number})) {
+	$players->{$input_player->{number}} = $input_player;
+#	}
+
+	return $input_player;
+
 }
 
 sub current_turn {
 	my ($self) = @_;
 	my $turns = $self->turns();
-	$turns->{$turns->{count}} ||= {};
-	my $current_turn = $turns->{$turns->{count}};
+	$turns->{$self->{data}->{turn_count}} ||= {};
+	my $current_turn = $turns->{$self->{data}->{turn_count}};
 
 	return $current_turn;
 }
@@ -198,7 +252,7 @@ sub current_turn {
 sub next_turn {
 	my ($self) =@_;
 	my $turns = $self->turns();
-	$turns->{count}++;
+	$self->{data}->{turn_count}++;
 	my $current_turn = $self->current_turn();
 	$self->debug("new turn $turns->{count}");
 	return $current_turn;
