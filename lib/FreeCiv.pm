@@ -27,8 +27,10 @@ sub new {
 sub _init {
 
 	my ($self) = @_;
-
+	
+	$self->{data}->{turn_count} = 0;
 	$self->{data}->{turns} = {};
+	$self->{data}->{turns}->{0}->{start_time}  = "" . DateTime->now();
 	$self->{data}->{players} = {};
 #	$self->{port} = 0;
 
@@ -66,10 +68,10 @@ sub _parse_log{
 
 	## End of turn
 	if ($line =~ /End\/start-turn/) {
-		if ($self->{data}->{turn_count} > 0) {
-			$current_turn->{end_time} = "". DateTime->now();
-			$self->debug("\t". Dumper $current_turn);
-		}
+#		if ($self->{data}->{turn_count} => 0) {
+		$current_turn->{end_time} = "". DateTime->now();
+		$self->debug("\t". Dumper $current_turn);
+#		}
 		$current_turn = $self->next_turn();
 		$current_turn->{start_time} = "". DateTime->now();
 		
@@ -181,20 +183,21 @@ sub remove_player {
 	my ($self, $playername) = @_;
 	my $removednumber = scalar $self->{data}->{players}->{$playername}->{number};
 	$self->debug ("Removing player: $playername\n");
-	$self->debug (Dumper($self->{data}->{players}->{$playername}));
+#	$self->debug (Dumper($self->{data}->{players}->{$playername}));
 	
-#	undef $self->{players}->{$playername};
-#	delete $self->{data}->{players}->{$playername}->{ip};
- #	delete $self->{data}->{players}->{$playername};
 	delete $self->{data}->{players}->{$playername};
 	delete $self->{data}->{players}->{$removednumber};
 
-	foreach ($self->{data}->{players}) {
-		if ($self->{data}->{players}->{$_}->{number} > $removednumber) { # $removednumber (willbe)
-			$self->{data}->{players}->{$_}->{number}--;
+	for( values %{$self->{data}->{players}} ) {
+		if ($_->{number} > $removednumber) {
+			delete $self->{data}->{players}->{$_->{number}};
+			$_->{number}--;
+			$self->{data}->{players}->{$_->{number}} = $self->{data}->{players}->{$_->{name}};
 		}
 	}
-	$self->{data}->{player_count}--;
+
+	$self->{data}->{player_count}--;	
+
 }
 
 sub set_player {
@@ -243,8 +246,10 @@ sub set_player {
 
 sub current_turn {
 	my ($self) = @_;
-#	my $turns = $self->turns();
-#	$turns->{$self->{data}->{turn_count}} ||= {};
+	my $turns = $self->turns();
+	$turns->{$self->{data}->{turn_count}} ||= {};
+#	$turns->{$self->{data}->{turn_count}} = {};
+#	$turns ||= {};
 	my $current_turn = $turns->{$self->{data}->{turn_count}};
 
 	return $current_turn;

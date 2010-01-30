@@ -1,1 +1,17 @@
-Might it work - another change
+freeciv PubWeb
+
+TODO
+
+* Capture leader name
+* Allow /take and other ai server commands to update the ai/human players
+* Track server settings
+* Capture end of game
+* Generate end of game gif
+* Restore Servers
+* Generate extra stats (combats, city builds per turn)
+* Rethink base_dir
+* Make a better README + INSTALL
+
+This is designed to work with freeciv server version 2.1.10.
+
+It uses the debug output from the server to collect data.  It may work between verisons however if the log output is ever changed (which it may well do) this app will need to be updated.  This app owuld be better served with a better/more reliable data source.

@@ -1,6 +1,6 @@
 #FREECIV SERVER COMMAND FILE, version 2.1.10
 # These are server options saved from a running civserver.
-cmdlevel none new
+cmdlevel hack new
 cmdlevel hack first
 easy
 metapatches 
