@@ -1,17 +1,70 @@
 freeciv PubWeb
 
-TODO
+TODO(server-wrapper)
 
-* Capture leader name
-* Allow /take and other ai server commands to update the ai/human players
-* Track server settings
+* Implement safe quit
+* Update player list from /list command
+* Allow /take and other ai server commands to update the ai/human players might be resolvable with the /list command
+* Savegame at start of game - to fix bug, if server ends before end of first turn.
 * Capture end of game
 * Generate end of game gif
-* Restore Servers
-* Generate extra stats (combats, city builds per turn)
 * Rethink base_dir
 * Make a better README + INSTALL
+* CRRRAAAZZY IDEA! read player colours from generated ppms! going to investigate this now!
 
 This is designed to work with freeciv server version 2.1.10.
 
 It uses the debug output from the server to collect data.  It may work between verisons however if the log output is ever changed (which it may well do) this app will need to be updated.  This app owuld be better served with a better/more reliable data source.
+
+TODO (Web)
+* actually make an about page.
+* rename test.pl index.pl
+* some sort of filtering on the main get games list.
+	* active/show all filter implemented.
+	* show my games only for logged in users
+* starting/stopping/resuming of games
+* user registration
+* account settings page
+	* turn completed setting (irc notification or email)
+	* starting/pausing/resuming of games.
+* update to work with latest script.pl from og
+* average turn time statistics
+* more game metadata from game rulesets
+* record who started which games etc in metadata file..
+* make code more robust for proper portability (i.e. no hardcoded urls, hosts, passwords, etc...)
+* admin section
+	* user privlages
+	* reporting (game counts, player activity etc..)
+* Instead of using a default assumption of 24h/turn read this in fromthe server metadata
+* once logged in default to showing only your games.
+* Add a resources section to website
+	* http://freeciv.wikia.com/wiki/The_Art_of_Freeciv
+	* downloads?
+===============
+BUGS? well not really, more sorta other stuff...
+===============
+BACKEND
+* Player structure dies if game starts too fast after a playe joins, if you wait 5-10 seconds after last player joins everything is fine.
+* cant restore from first turn.
+FRONTEND
+* Login system needs properly testing (i.e. login from a different ip whilst already logged in etc).
+* would be good to check the countdown timers work across different timezones..
+
+DONE!
+* Fix flag filename - use misc/flags.spec to lookup filename
+* Capture leader name
+* can now press enter/return to start processing a login (dunno about you, but it was getting on my nerves) - nice :)
+* countdown timers for next turn.
+* Server Settings dumped log/(id)/settings.serv used for game restoring and can be read by web front end.
+* Restore Servers - can now restore a game from its previous position - seems to work flawlessly - look out for bugs!
+* Generate extra stats (combats, city builds per turn)
+* For AI players Currently connected should always be true (web end or back end that sets this i'm not sure).  -- I've set this in the back end, AI players are always connected.
+
+CANT DO!
+* Ability to see who still needs to click turn? (not sure if we decided this wasn't possible or not) or a timestamp for each turn as to when each player clicked turn.
+	* I know this is high on everybody's wish list -but really- dont have any way to do it!
+
+UNOFFICAL CLIENT COMMANDS:
+These commands will throw an error message to the client - but the command will still be executed by the script. - remember output goes to game.log
+
+/force [command]	Will force the server to execute [command]
